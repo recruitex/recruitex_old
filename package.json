@@ -1,5 +1,40 @@
 {
   "name": "recruitex",
+  "version": "0.0.1",
+  "description": "Recruitex is a recruitment platform",
+  "keywords": [
+    "Recruitex",
+    "Recruitment",
+    "Platform"
+  ],
+  "homepage": "https://github.com/recruitex/recruitex",
+  "license": "MIT",
+  "author": "Recruitex",
+  "contributors": [
+    {
+      "name": "Mateusz Stepaniuk",
+      "email": "stepaniuk.m05@gmail.com",
+      "url": "https://blogeusz.pl"
+    },
+    {
+      "name": "Stanisław Synowiec",
+      "email": "stanislaw@ssynowiec.pl",
+      "url": "https://ssynowiec.pl"
+    },
+    {
+      "name": "Adrian Polak",
+      "email": "adrian.polak20@gmail.com",
+      "url": "https://adipol.dev"
+    },
+    {
+      "name": "Hixo23",
+      "url": "https://github.com/Hixo23"
+    }
+  ],
+  "repository": {
+    "url": "https://github.com/recruitex/recruitex.git",
+    "type": "git"
+  },
   "private": true,
   "scripts": {
     "build": "turbo build",
@@ -13,8 +48,9 @@
     "prettier": "^3.2.5",
     "turbo": "latest"
   },
-  "packageManager": "pnpm@8.9.0",
+  "packageManager": "pnpm@9.0.6",
   "engines": {
-    "node": ">=18"
+    "node": ">=18",
+    "pnpm": ">=9"
   }
 }

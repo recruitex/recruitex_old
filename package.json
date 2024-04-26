@@ -1,6 +1,7 @@
 {
   "name": "recruitex",
   "version": "0.0.1",
+  "private": true,
   "description": "Recruitex is a recruitment platform",
   "keywords": [
     "Recruitex",
@@ -8,6 +9,10 @@
     "Platform"
   ],
   "homepage": "https://github.com/recruitex/recruitex",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/recruitex/recruitex.git"
+  },
   "license": "MIT",
   "author": "Recruitex",
   "contributors": [
@@ -31,20 +36,17 @@
       "url": "https://github.com/Hixo23"
     }
   ],
-  "repository": {
-    "url": "https://github.com/recruitex/recruitex.git",
-    "type": "git"
-  },
-  "private": true,
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
-    "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "lint": "turbo lint"
   },
+  "prettier": "@vercel/style-guide/prettier",
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@vercel/style-guide": "^5.2.0",
     "prettier": "^3.2.5",
     "turbo": "latest"
   },

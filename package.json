@@ -1,0 +1,64 @@
+{
+  "name": "recruitex",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Recruitex is a recruitment platform",
+  "keywords": [
+    "Recruitex",
+    "Recruitment",
+    "Platform"
+  ],
+  "homepage": "https://github.com/recruitex/recruitex",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/recruitex/recruitex.git"
+  },
+  "license": "MIT",
+  "author": "Recruitex",
+  "contributors": [
+    {
+      "name": "Mateusz Stepaniuk",
+      "email": "stepaniuk.m05@gmail.com",
+      "url": "https://blogeusz.pl"
+    },
+    {
+      "name": "Stanisław Synowiec",
+      "email": "stanislaw@ssynowiec.pl",
+      "url": "https://ssynowiec.pl"
+    },
+    {
+      "name": "Adrian Polak",
+      "email": "adrian.polak20@gmail.com",
+      "url": "https://adipol.dev"
+    },
+    {
+      "name": "Hixo23",
+      "url": "https://github.com/Hixo23"
+    }
+  ],
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,md}\"",
+    "lint": "turbo lint"
+  },
+  "prettier": "@vercel/style-guide/prettier",
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@vercel/style-guide": "^5.2.0",
+    "prettier": "^3.2.5",
+    "turbo": "latest"
+  },
+  "packageManager": "pnpm@9.0.6",
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=9"
+  },
+  "dependencies": {
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3"
+  }
+}

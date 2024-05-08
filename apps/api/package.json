@@ -1,17 +1,11 @@
 {
   "name": "api",
-  "module": "index.ts",
   "type": "module",
-  "devDependencies": {
-    "@edgedb/generate": "^0.5.3",
-    "@types/bun": "latest"
-  },
+  "module": "index.ts",
   "scripts": {
-    "start": "bun run index.ts",
-    "dev": "bun run --watch index.ts"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
+    "dev": "bun run --watch index.ts",
+    "generate": "bunx @edgedb/generate edgeql-js",
+    "start": "bun run index.ts"
   },
   "dependencies": {
     "@effect/platform": "^0.51.0",
@@ -19,5 +13,12 @@
     "@effect/schema": "^0.66.12",
     "edgedb": "^1.5.5",
     "effect": "^3.1.0"
+  },
+  "devDependencies": {
+    "@edgedb/generate": "^0.5.3",
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
   }
 }

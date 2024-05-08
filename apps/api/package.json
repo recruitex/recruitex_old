@@ -3,6 +3,7 @@
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
+    "@edgedb/generate": "^0.5.3",
     "@types/bun": "latest"
   },
   "scripts": {
@@ -16,6 +17,7 @@
     "@effect/platform": "^0.51.0",
     "@effect/platform-bun": "^0.34.0",
     "@effect/schema": "^0.66.12",
+    "edgedb": "^1.5.5",
     "effect": "^3.1.0"
   }
 }

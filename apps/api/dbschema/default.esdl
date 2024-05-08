@@ -10,7 +10,17 @@ module default {
       ))
     );
 
-  type User {
+  abstract type Lifecycle {
+      created: datetime {
+        rewrite insert using (datetime_of_statement());
+      }
+      updated: datetime {
+        rewrite insert using (datetime_of_statement());
+        rewrite update using (datetime_of_statement());
+      }
+  }
+
+  type User extending Lifecycle {
       required identity: ext::auth::Identity {
         constraint exclusive;
       };
@@ -20,13 +30,5 @@ module default {
       userRole: Role {
         default := "candidate";
       };
-
-      created: datetime {
-        rewrite insert using (datetime_of_statement());
-      }
-      updated: datetime {
-        rewrite insert using (datetime_of_statement());
-        rewrite update using (datetime_of_statement());
-      }
     }
 };

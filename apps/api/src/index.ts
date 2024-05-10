@@ -1,6 +1,6 @@
 import { BunHttpServer, BunRuntime } from '@effect/platform-bun';
 import { HttpServer } from '@effect/platform';
-import { Config, Console, Effect, Layer, LogLevel, Logger } from 'effect';
+import { Config, Console, Effect, Layer } from 'effect';
 import { EDGEDB_AUTH_TOKEN_COOKIE } from './auth/consts';
 import { AuthRouter } from './auth/router';
 import { corsMiddleware } from './cors';

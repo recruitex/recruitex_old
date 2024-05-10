@@ -14,8 +14,11 @@ export function bytesToBase64Url(bytes: Uint8Array) {
   let base64url = '';
 
   for (let i = 0; i < len; i += 3) {
+    // @ts-ignore-next-line Safe
     const b1 = bytes[i] & 0xff;
+    // @ts-ignore-next-line Safe
     const b2 = i + 1 < len ? bytes[i + 1] & 0xff : 0;
+    // @ts-ignore-next-line Safe
     const b3 = i + 2 < len ? bytes[i + 2] & 0xff : 0;
 
     const enc1 = b1 >> 2;

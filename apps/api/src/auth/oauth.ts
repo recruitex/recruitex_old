@@ -1,6 +1,5 @@
 import { Effect } from 'effect';
-import { GithubUserSchema, OAuthProvider } from './schema';
-import { HttpClient } from '@effect/platform';
+import { OAuthProvider } from './schema';
 import { google } from 'googleapis';
 import { Octokit } from 'octokit';
 import { assertUnreachable } from '../utils/assert';

@@ -7,12 +7,14 @@ export const EdgedbAuthResponseSchema = Schema.Struct({
 });
 
 export const GithubUserSchema = Schema.Struct({
-  email: Schema.String,
+  email: Schema.optional(Schema.String),
+  name: Schema.optional(Schema.String),
+  login: Schema.String,
 });
 
 export const GoogleUserSchema = Schema.Struct({
-  email: Schema.String,
-  name: Schema.String,
+  email: Schema.optional(Schema.String),
+  name: Schema.optional(Schema.String),
 });
 
 export enum OAuthProvider {

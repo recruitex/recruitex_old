@@ -24,11 +24,11 @@ module default {
       required identity: ext::auth::Identity {
         constraint exclusive;
       };
-      required name: str;
+      name: str;
       email: str;
 
       userRole: Role {
-        default := "candidate";
+        default := "recruiter";
       };
     }
 };

@@ -4,6 +4,10 @@ import { google } from 'googleapis';
 import { Octokit } from 'octokit';
 import { assertUnreachable } from '../utils/assert';
 
+export class OAuthError extends Error {
+  _tag = 'OAuthError';
+}
+
 export const getUserFromOauth = ({
   provider,
   providerToken,
@@ -12,7 +16,7 @@ export const getUserFromOauth = ({
   providerToken: string;
 }) =>
   Effect.gen(function* () {
-    if (provider === OAuthProvider.github) {
+    if (provider === OAuthProvider.GitHub) {
       return yield* Effect.tryPromise({
         async try() {
           const octokit = new Octokit({ auth: providerToken });
@@ -25,12 +29,12 @@ export const getUserFromOauth = ({
           };
         },
         catch(error) {
-          console.log('Error getting info about user from GitHub');
-
-          return Effect.fail(error);
+          return new OAuthError("Couldn't get user info from GitHub.", {
+            cause: error,
+          });
         },
       });
-    } else if (provider === OAuthProvider.google) {
+    } else if (provider === OAuthProvider.Google) {
       return yield* Effect.tryPromise({
         async try(signal) {
           const googleReponse = await google.oauth2('v2').userinfo.get(
@@ -45,9 +49,9 @@ export const getUserFromOauth = ({
           };
         },
         catch(error) {
-          console.log('Error getting info about user from Google');
-
-          return Effect.fail(error);
+          return new OAuthError("Couldn't get user info from Google.", {
+            cause: error,
+          });
         },
       });
     }

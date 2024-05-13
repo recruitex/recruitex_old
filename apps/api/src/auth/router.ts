@@ -15,10 +15,11 @@ import { createUser, getTokenResponse } from './edgedb';
 import { getUserFromOauth } from './oauth';
 
 export const AuthRouter = HttpServer.router.empty.pipe(
-  HttpServer.router.get('/auth/ui/signin', handleAuthUi('signin')),
-  HttpServer.router.get('/auth/ui/signup', handleAuthUi('signup')),
-  HttpServer.router.get('/auth/signout', handleSignout()),
-  HttpServer.router.get('/auth/callback', handleCallback()),
+  HttpServer.router.get('/ui/signin', handleAuthUi('signin')),
+  HttpServer.router.get('/ui/signup', handleAuthUi('signup')),
+  HttpServer.router.get('/signout', handleSignout()),
+  HttpServer.router.get('/callback', handleCallback()),
+  HttpServer.router.prefixAll('/auth'),
 );
 
 function handleAuthUi(method: 'signin' | 'signup') {

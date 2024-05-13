@@ -18,8 +18,8 @@ export const GoogleUserSchema = Schema.Struct({
 });
 
 export enum OAuthProvider {
-  google = 'builtin::oauth_google',
-  github = 'builtin::oauth_github',
+  Google = 'builtin::oauth_google',
+  GitHub = 'builtin::oauth_github',
 }
 
 export const OAuthProviderSchema = Schema.Enums(OAuthProvider);

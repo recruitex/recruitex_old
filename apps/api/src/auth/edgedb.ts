@@ -3,6 +3,10 @@ import { Effect, Config } from 'effect';
 import { EdgedbAuthResponseSchema } from './schema';
 import e, { createClient } from '../../dbschema/edgeql-js';
 
+export class CreateUserError extends Error {
+  _tag = 'CreateUserError';
+}
+
 export const getTokenResponse = ({
   code,
   verifier,
@@ -54,8 +58,7 @@ export const createUser = (user: {
 
       return await insertQuery.run(client);
     },
-    catch(e) {
-      console.log(e);
-      return null;
+    catch(error) {
+      return new CreateUserError('Failed to create user.', { cause: error });
     },
   });

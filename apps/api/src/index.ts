@@ -6,6 +6,7 @@ import { AuthRouter } from './auth/router';
 import { corsMiddleware } from './cors';
 import { HealthRouter } from './health/router';
 import { LogLevelLive } from './logging';
+import { statusCodes } from './utils/response';
 
 const ServerLive = BunHttpServer.server.layerConfig({
   port: Config.number('PORT').pipe(Config.withDefault(3001)),
@@ -40,13 +41,17 @@ const runnable = WholeRouter.pipe(
   Effect.catchAll((error) =>
     Effect.gen(function* () {
       yield* Console.error('Error', error);
-      return HttpServer.response.text('Error', { status: 500 });
+      return HttpServer.response.text('Error', {
+        status: statusCodes.INTERNAL_SERVER_ERROR,
+      });
     }),
   ),
   Effect.catchAllDefect((defect) =>
     Effect.gen(function* () {
       yield* Console.error('Defect', defect);
-      return HttpServer.response.text('Defect', { status: 500 });
+      return HttpServer.response.text('Defect', {
+        status: statusCodes.INTERNAL_SERVER_ERROR,
+      });
     }),
   ),
   HttpServer.server.serve(HttpServer.middleware.logger),

@@ -18,7 +18,7 @@ export const AuthRouter = HttpServer.router.empty.pipe(
   HttpServer.router.get('/ui/signin', handleAuthUi('signin')),
   HttpServer.router.get('/ui/signup', handleAuthUi('signup')),
   HttpServer.router.get('/signout', handleSignout()),
-  HttpServer.router.get('/callback', handleCallback()),
+  HttpServer.router.get('/callback', handleCallback().pipe(Effect.scoped)),
   HttpServer.router.prefixAll('/auth'),
 );
 
@@ -147,7 +147,7 @@ function handleCallback() {
       yield* createUser({ ...user, identity_id: response.identity_id });
     }
 
-    const inOneMinute = addMinutes(constructNow(Date.now()), 1);
+    const inTenMinutes = addMinutes(constructNow(Date.now()), 10);
     const frontBaseUrl = yield* Config.string('FRONT_BASE_URL');
 
     return yield* HttpServer.response.empty().pipe(
@@ -180,7 +180,7 @@ function handleCallback() {
               httpOnly: true,
               path: '/',
               sameSite: 'lax',
-              expires: inOneMinute,
+              expires: inTenMinutes,
             },
           ],
         ]),

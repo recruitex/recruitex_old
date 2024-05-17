@@ -2,6 +2,7 @@ import { HttpClient } from '@effect/platform';
 import { Effect, Config } from 'effect';
 import { EdgedbAuthResponseSchema } from './schema';
 import e, { createClient } from '../../dbschema/edgeql-js';
+import { edgedbClient } from '../edgedb.ts/client';
 
 export class CreateUserError extends Error {
   _tag = 'CreateUserError';
@@ -36,29 +37,31 @@ export const createUser = (user: {
   email: string | null | undefined;
   identity_id: string;
 }) =>
-  Effect.tryPromise({
-    async try() {
-      const client = createClient();
+  Effect.gen(function* () {
+    const client = yield* edgedbClient;
 
-      const identity = e
-        .select(e.ext.auth.Identity, (identity) => ({
-          filter: e.op(identity.id, '=', e.uuid(user.identity_id)),
-        }))
-        .assert_single();
+    return yield* Effect.tryPromise({
+      async try() {
+        const identity = e
+          .select(e.ext.auth.Identity, (identity) => ({
+            filter: e.op(identity.id, '=', e.uuid(user.identity_id)),
+          }))
+          .assert_single();
 
-      const insertQuery = e
-        .insert(e.User, {
-          name: user.name,
-          email: user.email,
-          identity,
-        })
-        .unlessConflict((user) => ({
-          on: user.identity,
-        }));
+        const insertQuery = e
+          .insert(e.User, {
+            name: user.name,
+            email: user.email,
+            identity,
+          })
+          .unlessConflict((user) => ({
+            on: user.identity,
+          }));
 
-      return await insertQuery.run(client);
-    },
-    catch(error) {
-      return new CreateUserError('Failed to create user.', { cause: error });
-    },
+        return await insertQuery.run(client);
+      },
+      catch(error) {
+        return new CreateUserError('Failed to create user.', { cause: error });
+      },
+    });
   });

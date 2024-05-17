@@ -7,6 +7,7 @@ import { corsMiddleware } from './cors';
 import { HealthRouter } from './health/router';
 import { LogLevelLive } from './logging';
 import { statusCodes } from './utils/response';
+import { OrganizationsRouter } from './organizations/router';
 
 const ServerLive = BunHttpServer.server.layerConfig({
   port: Config.number('PORT').pipe(Config.withDefault(3001)),
@@ -30,10 +31,11 @@ const MainRouter = HttpServer.router.empty.pipe(
   ),
 );
 
-const routers = [MainRouter, AuthRouter, HealthRouter];
+const routers = [MainRouter, AuthRouter, HealthRouter, OrganizationsRouter];
 
-const WholeRouter = routers.reduce((acc, router) =>
-  acc.pipe(HttpServer.router.concat(router)),
+const WholeRouter = routers.reduce(
+  (acc, router) => acc.pipe(HttpServer.router.concat(router)),
+  HttpServer.router.empty,
 );
 
 const runnable = WholeRouter.pipe(

@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from '@repo/ui/button';
 import { use, cache } from 'react';
 
 const getInit = cache(async () => {

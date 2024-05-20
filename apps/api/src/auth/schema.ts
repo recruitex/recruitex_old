@@ -23,3 +23,9 @@ export enum OAuthProvider {
 }
 
 export const OAuthProviderSchema = Schema.Enums(OAuthProvider);
+
+export const InitEmailVerificationSchema = Schema.Struct({
+  email: Schema.String,
+});
+
+export type InitEmailVerification = typeof InitEmailVerificationSchema.Type;

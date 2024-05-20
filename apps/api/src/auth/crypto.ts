@@ -3,7 +3,7 @@ import { Effect } from 'effect';
 const BYTES = 32;
 
 export class PKCEError extends Error {
-  _tag = 'PKCE_ERROR';
+  _tag = 'PKCE_ERROR' as const;
 }
 
 const BASE64_URL_CHARS =
@@ -38,7 +38,23 @@ export function bytesToBase64Url(bytes: Uint8Array) {
   return base64url;
 }
 
-async function sha256(source: BufferSource | string) {
+export function base64UrlToBytes(base64Url: string): Uint8Array {
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+
+  const padding = base64.length % 4 === 0 ? 0 : 4 - (base64.length % 4);
+
+  const paddedBase64 = base64 + '='.repeat(padding);
+  const binaryString = atob(paddedBase64);
+
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+
+  return bytes;
+}
+
+export async function sha256(source: BufferSource | string) {
   const bytes =
     typeof source === 'string' ? new TextEncoder().encode(source) : source;
   return new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));

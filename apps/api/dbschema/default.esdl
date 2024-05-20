@@ -20,18 +20,37 @@ module default {
       }
   }
 
+  type EmailVerification extending Lifecycle {
+    required email: str;
+    required challenge: str;
+    required expiresAt: datetime;
+
+    user := .<emailVerification[is User];
+  }
+
   type User extending Lifecycle {
-      required identity: ext::auth::Identity {
+      required multi identity: ext::auth::Identity {
         constraint exclusive;
       };
       name: str;
       email: str;
+      emailVerified: bool;
+      emailVerification: EmailVerification;
+      emailVerificationChallengeDuplicate: str;
+      emailAndVerification := if (.emailVerified) then (.email) else (.email ++ '\/' ++ .emailVerificationChallengeDuplicate);
+
       multi organizations := .<user[is UserInOrganization];
+
+      constraint exclusive on (.emailAndVerification);
   }
 
   type UserInOrganization extending Lifecycle {
-    required user: User;
-    required organization: Organization;
+    required user: User {
+      on source delete delete target;
+    };
+    required organization: Organization {
+      on source delete delete target;
+    };
     required role: OrganizationRole;
   }
 

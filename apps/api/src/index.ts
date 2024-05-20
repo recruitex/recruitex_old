@@ -1,13 +1,13 @@
 import { BunHttpServer, BunRuntime } from '@effect/platform-bun';
 import { HttpServer } from '@effect/platform';
 import { Config, Console, Effect, Layer } from 'effect';
-import { EDGEDB_AUTH_TOKEN_COOKIE } from './auth/consts';
-import { AuthRouter } from './auth/router';
-import { corsMiddleware } from './cors';
-import { HealthRouter } from './health/router';
-import { LogLevelLive } from './logging';
-import { statusCodes } from './utils/response';
-import { OrganizationsRouter } from './organizations/router';
+import { EDGEDB_AUTH_TOKEN_COOKIE } from '#/auth/consts';
+import { AuthRouter } from '#/auth/router';
+import { corsMiddleware } from '#/cors';
+import { HealthRouter } from '#/health/router';
+import { LogLevelLive } from '#/logging';
+import { statusCodes } from '#/utils/response';
+import { OrganizationsRouter } from '#/organizations/router';
 
 const ServerLive = BunHttpServer.server.layerConfig({
   port: Config.number('PORT').pipe(Config.withDefault(3001)),
@@ -18,7 +18,7 @@ const MainRouter = HttpServer.router.empty.pipe(
     '/',
     Effect.map(HttpServer.request.ServerRequest, (r) =>
       HttpServer.response.text(
-        `Hello World with EffectTS! ${r.cookies[EDGEDB_AUTH_TOKEN_COOKIE]}`,
+        `Hello World with EffectTS! ${r.cookies[EDGEDB_AUTH_TOKEN_COOKIE] ? 'Logged in' : 'Not logged in'}`,
       ),
     ),
   ),
@@ -31,11 +31,11 @@ const MainRouter = HttpServer.router.empty.pipe(
   ),
 );
 
-const routers = [MainRouter, AuthRouter, HealthRouter, OrganizationsRouter];
-
-const WholeRouter = routers.reduce(
-  (acc, router) => acc.pipe(HttpServer.router.concat(router)),
-  HttpServer.router.empty,
+const WholeRouter = HttpServer.router.empty.pipe(
+  HttpServer.router.concat(MainRouter),
+  HttpServer.router.concat(AuthRouter),
+  HttpServer.router.concat(HealthRouter),
+  HttpServer.router.concat(OrganizationsRouter),
 );
 
 const runnable = WholeRouter.pipe(

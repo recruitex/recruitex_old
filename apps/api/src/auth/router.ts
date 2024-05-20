@@ -1,24 +1,65 @@
 import { Config, Effect, Option } from 'effect';
 import { HttpServer } from '@effect/platform';
-import { createVerifierChallengePair } from './crypto';
+import { createVerifierChallengePair } from '#/auth/crypto';
 import {
   EDGEDB_AUTH_TOKEN_COOKIE,
   EDGEDB_PKCE_VERIFIER_COOKIE,
   REDIRECT_TO_COOKIE,
 } from './consts';
-import { OAuthProviderSchema } from './schema';
+import {
+  InitEmailVerificationSchema,
+  OAuthProviderSchema,
+} from '#/auth/schema';
 import { Schema } from '@effect/schema';
 import { addMinutes, constructNow } from 'date-fns';
-import { requestFullUrl } from '../utils/request';
-import { deleteCookie, deleteCookies, statusCodes } from '../utils/response';
-import { createUser, getTokenResponse } from './edgedb';
-import { getUserFromOauth } from './oauth';
+import { requestFullUrl } from '#/utils/request';
+import { deleteCookie, deleteCookies, statusCodes } from '#/utils/response';
+import { createUser, initVerifyEmail, verifyEmail } from '#/auth/db';
+import { getTokenResponse, getUserFromOauth } from '#/auth/oauth';
+import { EdgedbAuthClientLive, EdgedbClientLive } from '#/edgedb/client';
+import { NodemailerClientTest } from '#/emails/nodemailer';
 
 export const AuthRouter = HttpServer.router.empty.pipe(
   HttpServer.router.get('/ui/signin', handleAuthUi('signin')),
   HttpServer.router.get('/ui/signup', handleAuthUi('signup')),
   HttpServer.router.get('/signout', handleSignout()),
-  HttpServer.router.get('/callback', handleCallback().pipe(Effect.scoped)),
+  HttpServer.router.get(
+    '/callback',
+    handleCallback().pipe(
+      Effect.catchTag('CreateUserError', (error) => {
+        return Effect.gen(function* () {
+          const request = yield* HttpServer.request.ServerRequest;
+          const cookies = request.cookies;
+          const redirectTo = cookies[REDIRECT_TO_COOKIE];
+          const frontUrl = yield* Config.string('FRONT_BASE_URL');
+
+          return yield* HttpServer.response.empty().pipe(
+            HttpServer.response.setStatus(statusCodes.MOVED_PERMANENTLY),
+            HttpServer.response.setHeaders({
+              Location: `${redirectTo ?? frontUrl}?error=${error.message}`,
+            }),
+          );
+        });
+      }),
+      Effect.provide(EdgedbClientLive),
+      Effect.scoped,
+    ),
+  ),
+  HttpServer.router.post(
+    '/profile/email',
+    handleProfileEmailVerificationInit().pipe(
+      Effect.provide(EdgedbAuthClientLive),
+      Effect.provide(NodemailerClientTest),
+      Effect.scoped,
+    ),
+  ),
+  HttpServer.router.get(
+    '/profile/email',
+    handleProfileEmailVerification().pipe(
+      Effect.provide(EdgedbAuthClientLive),
+      Effect.scoped,
+    ),
+  ),
   HttpServer.router.prefixAll('/auth'),
 );
 
@@ -186,5 +227,59 @@ function handleCallback() {
         ]),
       ),
     );
+  });
+}
+
+function handleProfileEmailVerificationInit() {
+  return Effect.gen(function* () {
+    const body = yield* HttpServer.request.schemaBodyJson(
+      InitEmailVerificationSchema,
+    );
+
+    const updatedId = yield* initVerifyEmail(body);
+
+    if (!updatedId) {
+      return yield* HttpServer.response.json(
+        { message: 'Could init email verification!' },
+        {
+          status: statusCodes.INTERNAL_SERVER_ERROR,
+        },
+      );
+    }
+
+    return yield* HttpServer.response.json(updatedId, {
+      status: statusCodes.OK,
+    });
+  });
+}
+
+function handleProfileEmailVerification() {
+  return Effect.gen(function* () {
+    const url = yield* requestFullUrl;
+    const verifier = url.searchParams.get('verifier');
+
+    if (!verifier) {
+      return yield* HttpServer.response.json(
+        { message: 'Could not find verifier in the query params!' },
+        {
+          status: statusCodes.BAD_REQUEST,
+        },
+      );
+    }
+
+    const updated = yield* verifyEmail(verifier);
+
+    if (!updated) {
+      return yield* HttpServer.response.json(
+        { message: 'Could not verify email!' },
+        {
+          status: statusCodes.INTERNAL_SERVER_ERROR,
+        },
+      );
+    }
+
+    return yield* HttpServer.response.json(updated, {
+      status: statusCodes.OK,
+    });
   });
 }

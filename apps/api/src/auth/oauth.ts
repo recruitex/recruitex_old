@@ -1,12 +1,36 @@
-import { Effect } from 'effect';
-import { OAuthProvider } from './schema';
+import { Config, Effect } from 'effect';
+import { EdgedbAuthResponseSchema, OAuthProvider } from '#/auth/schema';
 import { google } from 'googleapis';
 import { Octokit } from 'octokit';
-import { assertUnreachable } from '../utils/assert';
+import { assertUnreachable } from '#/utils/assert';
+import { HttpClient } from '@effect/platform';
+import { createTaggedError } from '#/utils/error';
 
-export class OAuthError extends Error {
-  _tag = 'OAuthError';
-}
+export const OAuthError = createTaggedError('OAuthError');
+
+export const getTokenResponse = ({
+  code,
+  verifier,
+}: {
+  code: string;
+  verifier: string;
+}) =>
+  Effect.gen(function* () {
+    const EDGEDB_AUTH_BASE_URL = yield* Config.string('EDGEDB_AUTH_BASE_URL');
+    const codeExchangeUrl = new URL('token', EDGEDB_AUTH_BASE_URL);
+    codeExchangeUrl.searchParams.set('code', code);
+    codeExchangeUrl.searchParams.set('verifier', verifier);
+
+    return yield* HttpClient.request
+      .get(codeExchangeUrl.href)
+      .pipe(
+        HttpClient.client.fetch,
+        Effect.andThen(
+          HttpClient.response.schemaBodyJson(EdgedbAuthResponseSchema),
+        ),
+        Effect.scoped,
+      );
+  });
 
 export const getUserFromOauth = ({
   provider,

@@ -1,7 +1,9 @@
 import { Config, Effect } from 'effect';
 import { HttpServer } from '@effect/platform';
-import { EDGEDB_AUTH_TOKEN_COOKIE } from '../auth/consts';
-import e, { createClient } from '../../dbschema/edgeql-js';
+import { EDGEDB_AUTH_TOKEN_COOKIE } from '#/auth/consts';
+import e from '#db/edgeql-js';
+import { EdgeDBAuthClient } from '#/edgedb/client';
+import { createTaggedError } from '#/utils/error';
 
 export const requestFullUrl = Effect.gen(function* () {
   const req = yield* HttpServer.request.ServerRequest;
@@ -10,18 +12,22 @@ export const requestFullUrl = Effect.gen(function* () {
   return new URL(url, baseUrl);
 });
 
-export const getUserFromRequest = Effect.gen(function* () {
+export const Unauthorized = createTaggedError('UnauthorizedError');
+
+export const getTokenFromRequest = Effect.gen(function* () {
   const req = yield* HttpServer.request.ServerRequest;
 
   const token = req.cookies[EDGEDB_AUTH_TOKEN_COOKIE];
 
   if (!token) {
-    return 'unauthorized';
+    return yield* Effect.fail(new Unauthorized('No token found in request!'));
   }
 
-  const client = createClient().withGlobals({
-    'ext::auth::client_token': token,
-  });
+  return token;
+});
+
+export const getUserFromRequest = Effect.gen(function* () {
+  const client = yield* EdgeDBAuthClient;
 
   const userQuery = e
     .select(e.User, (user) => ({
@@ -36,13 +42,15 @@ export const getUserFromRequest = Effect.gen(function* () {
     async try() {
       return await userQuery.run(client);
     },
-    catch() {
-      return null;
+    catch(error) {
+      return new Unauthorized('No user found for given token!', {
+        cause: error,
+      });
     },
   });
 
   if (!user) {
-    return 'unauthorized';
+    return yield* Effect.fail(new Unauthorized('User not found!'));
   }
 
   return user;

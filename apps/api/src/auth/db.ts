@@ -11,7 +11,6 @@ import {
 } from '#/auth/crypto';
 import { NodemailerClient } from '#/emails/nodemailer';
 import { timingSafeEqual } from 'node:crypto';
-import { stringToUint8Array } from 'uint8array-extras';
 
 export const CreateUserError = createTaggedError('CreateUserError');
 export const UpdateProfileError = createTaggedError('UpdateProfileError');

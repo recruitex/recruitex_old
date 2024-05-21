@@ -8,12 +8,12 @@
     "start": "bun run ./src/index.ts"
   },
   "dependencies": {
-    "@effect/platform": "^0.53.8",
-    "@effect/platform-bun": "^0.34.14",
-    "@effect/schema": "^0.67.5",
+    "@effect/platform": "^0.53.12",
+    "@effect/platform-bun": "^0.34.18",
+    "@effect/schema": "^0.67.9",
     "date-fns": "^3.6.0",
-    "edgedb": "^1.5.6",
-    "effect": "^3.1.5",
+    "edgedb": "^1.5.7",
+    "effect": "^3.2.1",
     "googleapis": "^137.1.0",
     "nodemailer": "^6.9.13",
     "octokit": "^4.0.2",

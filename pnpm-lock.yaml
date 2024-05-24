@@ -159,7 +159,11 @@ importers:
         specifier: ^5.4.5
         version: 5.4.5
 
-  packages/tailwind-config: {}
+  packages/tailwind-config:
+    dependencies:
+      tailwindcss-animate:
+        specifier: ^1.0.7
+        version: 1.0.7(tailwindcss@3.4.3(ts-node@10.9.2(@types/node@20.12.11)(typescript@5.4.5)))
 
   packages/typescript-config: {}
 
@@ -8357,6 +8361,10 @@ snapshots:
   tailwindcss-animate@1.0.7(tailwindcss@3.4.3(ts-node@10.9.2(@types/node@20.11.24)(typescript@5.3.3))):
     dependencies:
       tailwindcss: 3.4.3(ts-node@10.9.2(@types/node@20.11.24)(typescript@5.3.3))
+
+  tailwindcss-animate@1.0.7(tailwindcss@3.4.3(ts-node@10.9.2(@types/node@20.12.11)(typescript@5.4.5))):
+    dependencies:
+      tailwindcss: 3.4.3(ts-node@10.9.2(@types/node@20.12.11)(typescript@5.4.5))
 
   tailwindcss@3.4.3(ts-node@10.9.2(@types/node@20.11.24)(typescript@5.3.3)):
     dependencies:

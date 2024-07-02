@@ -3,7 +3,11 @@ import { EdgedbAuthResponseSchema, OAuthProvider } from '#/auth/schema';
 import { google } from 'googleapis';
 import { Octokit } from 'octokit';
 import { assertUnreachable } from '#/utils/assert';
-import { HttpClient } from '@effect/platform';
+import {
+  HttpClient,
+  HttpClientRequest,
+  HttpClientResponse,
+} from '@effect/platform';
 import { createTaggedError } from '#/utils/error';
 
 export const OAuthError = createTaggedError('OAuthError');
@@ -21,15 +25,13 @@ export const getTokenResponse = ({
     codeExchangeUrl.searchParams.set('code', code);
     codeExchangeUrl.searchParams.set('verifier', verifier);
 
-    return yield* HttpClient.request
-      .get(codeExchangeUrl.href)
-      .pipe(
-        HttpClient.client.fetch,
-        Effect.andThen(
-          HttpClient.response.schemaBodyJson(EdgedbAuthResponseSchema),
-        ),
-        Effect.scoped,
-      );
+    return yield* HttpClientRequest.get(codeExchangeUrl.href).pipe(
+      HttpClient.fetch,
+      Effect.andThen(
+        HttpClientResponse.schemaBodyJson(EdgedbAuthResponseSchema),
+      ),
+      Effect.scoped,
+    );
   });
 
 export const getUserFromOauth = ({

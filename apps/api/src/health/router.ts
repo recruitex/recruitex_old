@@ -1,11 +1,12 @@
-import { HttpServer } from '@effect/platform';
+import { HttpRouter, HttpServerResponse } from '@effect/platform';
+import { HttpServerRequest } from '@effect/platform/HttpServerRequest';
 import { Effect } from 'effect';
 
-export const HealthRouter = HttpServer.router.empty.pipe(
-  HttpServer.router.get(
+export const HealthRouter = HttpRouter.empty.pipe(
+  HttpRouter.get(
     '/health',
-    Effect.map(HttpServer.request.ServerRequest, () =>
-      HttpServer.response.empty({ status: 204 }),
+    Effect.map(HttpServerRequest, () =>
+      HttpServerResponse.empty({ status: 204 }),
     ),
   ),
 );

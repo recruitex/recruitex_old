@@ -1,12 +1,12 @@
 import { Config, Effect } from 'effect';
-import { HttpServer } from '@effect/platform';
 import { EDGEDB_AUTH_TOKEN_COOKIE } from '#/auth/consts';
 import e from '#db/edgeql-js';
 import { EdgeDBAuthClient } from '#/edgedb/client';
 import { createTaggedError } from '#/utils/error';
+import { HttpServerRequest } from '@effect/platform/HttpServerRequest';
 
 export const requestFullUrl = Effect.gen(function* () {
-  const req = yield* HttpServer.request.ServerRequest;
+  const req = yield* HttpServerRequest;
   const baseUrl = yield* Config.string('BASE_URL');
   const url = req.url;
   return new URL(url, baseUrl);
@@ -15,7 +15,7 @@ export const requestFullUrl = Effect.gen(function* () {
 export const Unauthorized = createTaggedError('UnauthorizedError');
 
 export const getTokenFromRequest = Effect.gen(function* () {
-  const req = yield* HttpServer.request.ServerRequest;
+  const req = yield* HttpServerRequest;
 
   const token = req.cookies[EDGEDB_AUTH_TOKEN_COOKIE];
 

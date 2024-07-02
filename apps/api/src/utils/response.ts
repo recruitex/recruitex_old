@@ -1,15 +1,15 @@
-import { HttpServer } from '@effect/platform';
+import { HttpServerResponse, Cookies } from '@effect/platform';
 import { unixEpochStartDate } from '#/utils/time';
 
 const DELETED_COOKIE_VALUE = 'DELETED';
 
-type CookieOptions = NonNullable<HttpServer.cookies.Cookie['options']>;
+type CookieOptions = NonNullable<Cookies.Cookie['options']>;
 type CookieOptionsWithoutExpires = CookieOptions extends undefined
   ? never
   : Omit<CookieOptions, 'expires'>;
 
 export const deleteCookie = (name: string, opts: CookieOptionsWithoutExpires) =>
-  HttpServer.response.setCookie(name, DELETED_COOKIE_VALUE, {
+  HttpServerResponse.setCookie(name, DELETED_COOKIE_VALUE, {
     expires: unixEpochStartDate,
     ...opts,
   });
@@ -17,7 +17,7 @@ export const deleteCookie = (name: string, opts: CookieOptionsWithoutExpires) =>
 export const deleteCookies = (
   cookies: [string, CookieOptionsWithoutExpires][],
 ) =>
-  HttpServer.response.setCookies(
+  HttpServerResponse.setCookies(
     cookies.map((rawCookie) => {
       const [name, opts] = rawCookie;
       return [

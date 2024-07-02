@@ -1,5 +1,11 @@
 import { BunHttpServer, BunRuntime } from '@effect/platform-bun';
-import { HttpServer } from '@effect/platform';
+import {
+  HttpServer,
+  HttpRouter,
+  HttpServerRequest,
+  HttpServerResponse,
+  HttpMiddleware,
+} from '@effect/platform';
 import { Config, Console, Effect, Layer } from 'effect';
 import { EDGEDB_AUTH_TOKEN_COOKIE } from '#/auth/consts';
 import { AuthRouter } from '#/auth/router';
@@ -9,33 +15,33 @@ import { LogLevelLive } from '#/logging';
 import { statusCodes } from '#/utils/response';
 import { OrganizationsRouter } from '#/organizations/router';
 
-const ServerLive = BunHttpServer.server.layerConfig({
+const ServerLive = BunHttpServer.layerConfig({
   port: Config.number('PORT').pipe(Config.withDefault(3001)),
 });
 
-const MainRouter = HttpServer.router.empty.pipe(
-  HttpServer.router.get(
+const MainRouter = HttpRouter.empty.pipe(
+  HttpRouter.get(
     '/',
-    Effect.map(HttpServer.request.ServerRequest, (r) =>
-      HttpServer.response.text(
+    Effect.map(HttpServerRequest.HttpServerRequest, (r) =>
+      HttpServerResponse.text(
         `Hello World with EffectTS! ${r.cookies[EDGEDB_AUTH_TOKEN_COOKIE] ? 'Logged in' : 'Not logged in'}`,
       ),
     ),
   ),
-  HttpServer.router.get(
+  HttpRouter.get(
     '/sleep',
     Effect.as(
       Effect.sleep('1 second'),
-      HttpServer.response.text('Slept for 1 second'),
+      HttpServerResponse.text('Slept for 1 second'),
     ),
   ),
 );
 
-const WholeRouter = HttpServer.router.empty.pipe(
-  HttpServer.router.concat(MainRouter),
-  HttpServer.router.concat(AuthRouter),
-  HttpServer.router.concat(HealthRouter),
-  HttpServer.router.concat(OrganizationsRouter),
+const WholeRouter = HttpRouter.empty.pipe(
+  HttpRouter.concat(MainRouter),
+  HttpRouter.concat(AuthRouter),
+  HttpRouter.concat(HealthRouter),
+  HttpRouter.concat(OrganizationsRouter),
 );
 
 const runnable = WholeRouter.pipe(
@@ -43,7 +49,7 @@ const runnable = WholeRouter.pipe(
   Effect.catchAll((error) =>
     Effect.gen(function* () {
       yield* Console.error('Error', error);
-      return HttpServer.response.text('Error', {
+      return HttpServerResponse.text('Error', {
         status: statusCodes.INTERNAL_SERVER_ERROR,
       });
     }),
@@ -51,13 +57,13 @@ const runnable = WholeRouter.pipe(
   Effect.catchAllDefect((defect) =>
     Effect.gen(function* () {
       yield* Console.error('Defect', defect);
-      return HttpServer.response.text('Defect', {
+      return HttpServerResponse.text('Defect', {
         status: statusCodes.INTERNAL_SERVER_ERROR,
       });
     }),
   ),
-  HttpServer.server.serve(HttpServer.middleware.logger),
-  HttpServer.server.withLogAddress,
+  HttpServer.serve(HttpMiddleware.logger),
+  HttpServer.withLogAddress,
   Layer.provide(ServerLive),
   Layer.launch,
   Effect.provide(LogLevelLive),

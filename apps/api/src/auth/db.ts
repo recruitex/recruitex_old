@@ -5,7 +5,6 @@ import { createTaggedError } from '#/utils/error';
 import type { InitEmailVerification } from '#/auth/schema';
 import {
   base64UrlToBytes,
-  bytesToBase64Url,
   createVerifierChallengePair,
   sha256,
 } from '#/auth/crypto';

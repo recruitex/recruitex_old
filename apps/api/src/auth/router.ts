@@ -1,5 +1,9 @@
 import { Config, Effect, Option } from 'effect';
-import { HttpServer } from '@effect/platform';
+import {
+  HttpRouter,
+  HttpServerResponse,
+  HttpServerRequest,
+} from '@effect/platform';
 import { createVerifierChallengePair } from '#/auth/crypto';
 import {
   EDGEDB_AUTH_TOKEN_COOKIE,
@@ -19,33 +23,35 @@ import { getTokenResponse, getUserFromOauth } from '#/auth/oauth';
 import { EdgedbAuthClientLive, EdgedbClientLive } from '#/edgedb/client';
 import { NodemailerClientTest } from '#/emails/nodemailer';
 
-export const AuthRouter = HttpServer.router.empty.pipe(
-  HttpServer.router.get('/ui/signin', handleAuthUi('signin')),
-  HttpServer.router.get('/ui/signup', handleAuthUi('signup')),
-  HttpServer.router.get('/signout', handleSignout()),
-  HttpServer.router.get(
+export const AuthRouter = HttpRouter.empty.pipe(
+  HttpRouter.get('/ui/signin', handleAuthUi('signin')),
+  HttpRouter.get('/ui/signup', handleAuthUi('signup')),
+  HttpRouter.get('/signout', handleSignout()),
+  HttpRouter.get(
     '/callback',
     handleCallback().pipe(
       Effect.catchTag('CreateUserError', (error) => {
         return Effect.gen(function* () {
-          const request = yield* HttpServer.request.ServerRequest;
+          const request = yield* HttpServerRequest.HttpServerRequest;
           const cookies = request.cookies;
           const redirectTo = cookies[REDIRECT_TO_COOKIE];
           const frontUrl = yield* Config.string('FRONT_BASE_URL');
 
-          return yield* HttpServer.response.empty().pipe(
-            HttpServer.response.setStatus(statusCodes.MOVED_PERMANENTLY),
-            HttpServer.response.setHeaders({
+          const response = yield* HttpServerResponse.empty().pipe(
+            HttpServerResponse.setStatus(statusCodes.MOVED_PERMANENTLY),
+            HttpServerResponse.setHeaders({
               Location: `${redirectTo ?? frontUrl}?error=${error.message}`,
             }),
           );
+
+          return response;
         });
       }),
       Effect.provide(EdgedbClientLive),
       Effect.scoped,
     ),
   ),
-  HttpServer.router.post(
+  HttpRouter.post(
     '/profile/email',
     handleProfileEmailVerificationInit().pipe(
       Effect.provide(EdgedbAuthClientLive),
@@ -53,14 +59,14 @@ export const AuthRouter = HttpServer.router.empty.pipe(
       Effect.scoped,
     ),
   ),
-  HttpServer.router.get(
+  HttpRouter.get(
     '/profile/email',
     handleProfileEmailVerification().pipe(
       Effect.provide(EdgedbAuthClientLive),
       Effect.scoped,
     ),
   ),
-  HttpServer.router.prefixAll('/auth'),
+  HttpRouter.prefixAll('/auth'),
 );
 
 function handleAuthUi(method: 'signin' | 'signup') {
@@ -69,7 +75,7 @@ function handleAuthUi(method: 'signin' | 'signup') {
     const redirectUrl = fullUrl.searchParams.get('redirect_url');
 
     if (!redirectUrl) {
-      return yield* HttpServer.response.text('Missing redirect_url', {
+      return yield* HttpServerResponse.text('Missing redirect_url', {
         status: statusCodes.BAD_REQUEST,
       });
     }
@@ -80,12 +86,12 @@ function handleAuthUi(method: 'signin' | 'signup') {
     const edgeDbRedirectUrl = new URL(`ui/${method}`, EDGEDB_AUTH_BASE_URL);
     edgeDbRedirectUrl.searchParams.set('challenge', challenge);
 
-    return yield* HttpServer.response.empty().pipe(
-      HttpServer.response.setStatus(statusCodes.TEMPORARY_REDIRECT),
-      HttpServer.response.setHeaders({
+    return yield* HttpServerResponse.empty().pipe(
+      HttpServerResponse.setStatus(statusCodes.TEMPORARY_REDIRECT),
+      HttpServerResponse.setHeaders({
         Location: edgeDbRedirectUrl.href,
       }),
-      HttpServer.response.setCookies([
+      HttpServerResponse.setCookies([
         [
           REDIRECT_TO_COOKIE,
           redirectUrl,
@@ -107,14 +113,14 @@ function handleSignout() {
     const redirectUrl = fullUrl.searchParams.get('redirect_url');
 
     if (!redirectUrl) {
-      return yield* HttpServer.response.text('Missing redirect_url', {
+      return yield* HttpServerResponse.text('Missing redirect_url', {
         status: 400,
       });
     }
 
-    return yield* HttpServer.response.empty().pipe(
-      HttpServer.response.setStatus(statusCodes.TEMPORARY_REDIRECT),
-      HttpServer.response.setHeaders({
+    return yield* HttpServerResponse.empty().pipe(
+      HttpServerResponse.setStatus(statusCodes.TEMPORARY_REDIRECT),
+      HttpServerResponse.setHeaders({
         Location: redirectUrl,
       }),
       deleteCookie(EDGEDB_AUTH_TOKEN_COOKIE, {
@@ -128,7 +134,7 @@ function handleSignout() {
 
 function handleCallback() {
   return Effect.gen(function* () {
-    const req = yield* HttpServer.request.ServerRequest;
+    const req = yield* HttpServerRequest.HttpServerRequest;
     const fullUrl = yield* requestFullUrl;
     const requestParams = fullUrl.searchParams;
 
@@ -136,7 +142,7 @@ function handleCallback() {
     if (!code) {
       const error = requestParams.get('error');
 
-      return HttpServer.response.text(
+      return HttpServerResponse.text(
         `OAuth callback is missing 'code'. OAuth provider responded with error: ${error}`,
         { status: statusCodes.INTERNAL_SERVER_ERROR },
       );
@@ -147,7 +153,7 @@ function handleCallback() {
     const redirectTo = cookies[REDIRECT_TO_COOKIE];
 
     if (!verifier) {
-      return HttpServer.response.text(
+      return HttpServerResponse.text(
         `Could not find 'verifier' in the cookie store. Is this the same user agent/browser that started the authorization flow?`,
         { status: statusCodes.BAD_REQUEST },
       );
@@ -159,7 +165,7 @@ function handleCallback() {
     );
 
     if (maybeProvider.pipe(Option.isNone)) {
-      return HttpServer.response.text(
+      return HttpServerResponse.text(
         `OAuth callback is missing 'provider' or it is incorrect.`,
         {
           status: statusCodes.INTERNAL_SERVER_ERROR,
@@ -171,7 +177,7 @@ function handleCallback() {
     const response = yield* getTokenResponse({ code, verifier });
 
     if (!response.provider_token) {
-      return HttpServer.response.text(
+      return HttpServerResponse.text(
         `OAuth provider did not return a provider token.`,
         { status: statusCodes.INTERNAL_SERVER_ERROR },
       );
@@ -191,9 +197,9 @@ function handleCallback() {
     const inTenMinutes = addMinutes(constructNow(Date.now()), 10);
     const frontBaseUrl = yield* Config.string('FRONT_BASE_URL');
 
-    return yield* HttpServer.response.empty().pipe(
-      HttpServer.response.setStatus(statusCodes.MOVED_PERMANENTLY),
-      HttpServer.response.setHeader('Location', redirectTo ?? frontBaseUrl),
+    return yield* HttpServerResponse.empty().pipe(
+      HttpServerResponse.setStatus(statusCodes.MOVED_PERMANENTLY),
+      HttpServerResponse.setHeader('Location', redirectTo ?? frontBaseUrl),
       deleteCookies([
         [
           EDGEDB_PKCE_VERIFIER_COOKIE,
@@ -213,7 +219,7 @@ function handleCallback() {
         ],
       ]),
       Effect.andThen(
-        HttpServer.response.setCookies([
+        HttpServerResponse.setCookies([
           [
             EDGEDB_AUTH_TOKEN_COOKIE,
             response.auth_token,
@@ -232,14 +238,14 @@ function handleCallback() {
 
 function handleProfileEmailVerificationInit() {
   return Effect.gen(function* () {
-    const body = yield* HttpServer.request.schemaBodyJson(
+    const body = yield* HttpServerRequest.schemaBodyJson(
       InitEmailVerificationSchema,
     );
 
     const updatedId = yield* initVerifyEmail(body);
 
     if (!updatedId) {
-      return yield* HttpServer.response.json(
+      return yield* HttpServerResponse.json(
         { message: 'Could init email verification!' },
         {
           status: statusCodes.INTERNAL_SERVER_ERROR,
@@ -247,7 +253,7 @@ function handleProfileEmailVerificationInit() {
       );
     }
 
-    return yield* HttpServer.response.json(updatedId, {
+    return yield* HttpServerResponse.json(updatedId, {
       status: statusCodes.OK,
     });
   });
@@ -259,7 +265,7 @@ function handleProfileEmailVerification() {
     const verifier = url.searchParams.get('verifier');
 
     if (!verifier) {
-      return yield* HttpServer.response.json(
+      return yield* HttpServerResponse.json(
         { message: 'Could not find verifier in the query params!' },
         {
           status: statusCodes.BAD_REQUEST,
@@ -270,7 +276,7 @@ function handleProfileEmailVerification() {
     const updated = yield* verifyEmail(verifier);
 
     if (!updated) {
-      return yield* HttpServer.response.json(
+      return yield* HttpServerResponse.json(
         { message: 'Could not verify email!' },
         {
           status: statusCodes.INTERNAL_SERVER_ERROR,
@@ -278,7 +284,7 @@ function handleProfileEmailVerification() {
       );
     }
 
-    return yield* HttpServer.response.json(updated, {
+    return yield* HttpServerResponse.json(updated, {
       status: statusCodes.OK,
     });
   });
